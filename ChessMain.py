@@ -66,10 +66,17 @@ moveMade = False
 whiteToMove = True
 playerOne = True
 playerTwo = False
+intro = True
+chooseColour = False
 winner = ""
 validMoves = []
 moveLog = []
 
+# create two buttons
+button_width = 200
+button_height = 50
+play_human_button = p.Rect((WIDTH/2)-(button_width/2), 400, button_width, button_height)
+play_ai_button = p.Rect((WIDTH/2)-(button_width/2), 500, button_width, button_height)
 """
 possible starting positions for the pieces according to various accounts of the game
 """
@@ -168,7 +175,7 @@ def undoMove():
     moveMade = True
 
 def main():
-    global whiteToMove, whiteKingLocation, blackKingLocation, moveMade, winner, validMoves, playerOne, playerTwo
+    global whiteToMove, whiteKingLocation, blackKingLocation, moveMade, winner, validMoves, playerOne, playerTwo, intro, chooseColour
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
     clock = p.time.Clock()
@@ -189,6 +196,24 @@ def main():
                     row = (location[0]//SQ_SIZE)-1
                     col = (location[1]//SQ_SIZE)-1
                     print("col =",col," row =",row)
+                    if(intro == True and chooseColour == True):
+                        if play_human_button.collidepoint(location):
+                            playerOne = True
+                            playerTwo = False
+                            intro = False
+                            chooseColour = False
+                        elif play_ai_button.collidepoint(location):
+                            playerOne = False
+                            playerTwo = True
+                            intro = False
+                            chooseColour = False
+                    if(intro == True and chooseColour == False):
+                        if play_human_button.collidepoint(location):
+                            playerOne = True
+                            playerTwo = True
+                            intro = False
+                        elif play_ai_button.collidepoint(location):
+                            chooseColour = True
                     if(p.mouse.get_pos()[0] > 15 and p.mouse.get_pos()[1] > 15 and p.mouse.get_pos()[0] < 250 and p.mouse.get_pos()[1] < 70):
                         if canDraw(whiteToMove) == True:
                             callDraw()
@@ -884,29 +909,58 @@ def write(text,screen,color,pos,size):
     screen.blit(font.render(text,True,color),pos)
 
 def drawGameState(screen, validMoves, sqSelected):
-    global whiteToMove, green
+    global whiteToMove, green, play_human_button, play_ai_button, intro
     b = p.Surface((SQ_SIZE*3,SQ_SIZE-20))
     bg = p.transform.scale(p.image.load("images/bg.png"), (WIDTH, HEIGHT))
     screen.blit(bg, (0,0))
-    if(canDraw(whiteToMove) == True):
-        b.fill((250,200,150))
-        screen.blit(b, (10,10))
-        #p.draw.rect(screen,(250,200,150),[10,10,SQ_SIZE*3,SQ_SIZE-20])
-        write("Call Draw", screen, (0,0,0),(15,17),70)
-    drawBoard(screen)
-    highlightSquares(screen, validMoves, sqSelected)
-    if(isKingInCheck()):
-        if whiteToMove: kloc = whiteKingLocation
-        else: kloc = blackKingLocation
-        s = p.Surface((SQ_SIZE,SQ_SIZE))
-        s.set_alpha(200)
-        s.fill(p.Color(	(220,20,60)))
-        screen.blit(s, ((kloc[1]+1)*SQ_SIZE, (kloc[0]+1)*SQ_SIZE))
-    drawPieces(screen)
-    if winner == "w" or winner == "b":
-        write("Checkmate", screen, green,(225,425),150)
-    if winner == "d":
-        write("Draw", screen, green,(350,415),200)
+    if(intro == True):
+        drawBoard(screen)
+        button_color = (0, 255, 0)
+        text_color = (255, 255, 255)
+
+        # set font and font size
+        font = p.font.Font(None, 36)
+
+        # draw buttons
+        p.draw.rect(screen, button_color, play_human_button)
+        p.draw.rect(screen, button_color, play_ai_button)
+
+        if(chooseColour == False):
+            # render text on buttons
+            play_human_text = font.render("Play vs Human", True, text_color)
+            play_ai_text = font.render("Play vs AI", True, text_color)
+        else:
+            # render text on buttons
+            play_human_text = font.render("Play as White", True, text_color)
+            play_ai_text = font.render("Play as Black", True, text_color)
+
+        # center text on buttons
+        play_human_text_rect = play_human_text.get_rect(center=play_human_button.center)
+        play_ai_text_rect = play_ai_text.get_rect(center=play_ai_button.center)
+
+        # draw text on buttons
+        screen.blit(play_human_text, play_human_text_rect)
+        screen.blit(play_ai_text, play_ai_text_rect)
+    else:
+        if(canDraw(whiteToMove) == True):
+            b.fill((250,200,150))
+            screen.blit(b, (10,10))
+            #p.draw.rect(screen,(250,200,150),[10,10,SQ_SIZE*3,SQ_SIZE-20])
+            write("Call Draw", screen, (0,0,0),(15,17),70)
+        drawBoard(screen)
+        highlightSquares(screen, validMoves, sqSelected)
+        if(isKingInCheck()):
+            if whiteToMove: kloc = whiteKingLocation
+            else: kloc = blackKingLocation
+            s = p.Surface((SQ_SIZE,SQ_SIZE))
+            s.set_alpha(200)
+            s.fill(p.Color(	(220,20,60)))
+            screen.blit(s, ((kloc[1]+1)*SQ_SIZE, (kloc[0]+1)*SQ_SIZE))
+        drawPieces(screen)
+        if winner == "w" or winner == "b":
+            write("Checkmate", screen, green,(225,425),150)
+        if winner == "d":
+            write("Draw", screen, green,(350,415),200)
     p.display.flip()
 """
 Draw squares
