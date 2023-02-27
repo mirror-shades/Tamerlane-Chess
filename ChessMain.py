@@ -52,7 +52,8 @@ MAX_FPS = 15
 IMAGES = {}
 white = p.Color("#dad8da")
 black = p.Color("#696369")  
-green = p.Color("#303b47")
+darkBlue = p.Color("#303b47")
+green = p.Color("#307c47")
 whiteKingLocation = (8,5)
 blackKingLocation = (1,5)
 whiteRoyalty = 1
@@ -196,6 +197,7 @@ def main():
                     row = (location[0]//SQ_SIZE)-1
                     col = (location[1]//SQ_SIZE)-1
                     print("col =",col," row =",row)
+                    #intro screen
                     if(intro == True and chooseColour == True):
                         if play_human_button.collidepoint(location):
                             playerOne = True
@@ -214,9 +216,11 @@ def main():
                             intro = False
                         elif play_ai_button.collidepoint(location):
                             chooseColour = True
+                    #call a draw button
                     if(p.mouse.get_pos()[0] > 15 and p.mouse.get_pos()[1] > 15 and p.mouse.get_pos()[0] < 250 and p.mouse.get_pos()[1] < 70):
                         if canDraw(whiteToMove) == True:
                             callDraw()
+                    #main game clicking logic
                     if(col >= 0 and col <= 9 and row >= 0 and row <= 10):
                         if sqSelected == (col,row): #same square
                             sqSelected = ()
@@ -263,7 +267,6 @@ def main():
                     winner = "w"
             moveMade = True
         if moveMade:
-            #animation is broken when using undo, fix when rest of logic is finished
             animateMove(moveLog[-1], screen, clock)
             findKings()
             checkDrawOnMaterial()
@@ -909,21 +912,20 @@ def write(text,screen,color,pos,size):
     screen.blit(font.render(text,True,color),pos)
 
 def drawGameState(screen, validMoves, sqSelected):
-    global whiteToMove, green, play_human_button, play_ai_button, intro
+    global whiteToMove, darkBlue, play_human_button, play_ai_button, intro
     b = p.Surface((SQ_SIZE*3,SQ_SIZE-20))
     bg = p.transform.scale(p.image.load("images/bg.png"), (WIDTH, HEIGHT))
     screen.blit(bg, (0,0))
     if(intro == True):
         drawBoard(screen)
-        button_color = (0, 255, 0)
         text_color = (255, 255, 255)
 
         # set font and font size
         font = p.font.Font(None, 36)
 
         # draw buttons
-        p.draw.rect(screen, button_color, play_human_button)
-        p.draw.rect(screen, button_color, play_ai_button)
+        p.draw.rect(screen, darkBlue, play_human_button)
+        p.draw.rect(screen, darkBlue, play_ai_button)
 
         if(chooseColour == False):
             # render text on buttons
@@ -941,6 +943,11 @@ def drawGameState(screen, validMoves, sqSelected):
         # draw text on buttons
         screen.blit(play_human_text, play_human_text_rect)
         screen.blit(play_ai_text, play_ai_text_rect)
+
+        #draw title
+        title = p.font.SysFont("georgia", 100)
+        title_text = title.render("Tamerlane Chess", True, darkBlue)
+        screen.blit(title_text, (WIDTH/2 - title_text.get_width()/2, 50))
     else:
         if(canDraw(whiteToMove) == True):
             b.fill((250,200,150))
@@ -948,6 +955,7 @@ def drawGameState(screen, validMoves, sqSelected):
             #p.draw.rect(screen,(250,200,150),[10,10,SQ_SIZE*3,SQ_SIZE-20])
             write("Call Draw", screen, (0,0,0),(15,17),70)
         drawBoard(screen)
+        highlightLastMove(screen)
         highlightSquares(screen, validMoves, sqSelected)
         if(isKingInCheck()):
             if whiteToMove: kloc = whiteKingLocation
@@ -958,9 +966,9 @@ def drawGameState(screen, validMoves, sqSelected):
             screen.blit(s, ((kloc[1]+1)*SQ_SIZE, (kloc[0]+1)*SQ_SIZE))
         drawPieces(screen)
         if winner == "w" or winner == "b":
-            write("Checkmate", screen, green,(225,425),150)
+            write("Checkmate", screen, darkBlue,(225,425),150)
         if winner == "d":
-            write("Draw", screen, green,(350,415),200)
+            write("Draw", screen, darkBlue,(350,415),200)
     p.display.flip()
 """
 Draw squares
@@ -1026,7 +1034,19 @@ def animateMove(move, screen, clock):
         screen.blit(IMAGES[move.pieceMoved], p.Rect((r+1)*SQ_SIZE,(c+1)*SQ_SIZE,SQ_SIZE,SQ_SIZE))
         p.display.flip()
         clock.tick(60)
-
+"""
+highlight last move made
+"""
+def highlightLastMove(screen):
+    global moveLog, green
+    if(len(moveLog) > 0):
+        move = moveLog[-1]
+        print(move.startRow,move.startCol,move.endRow,move.endCol)
+        s = p.Surface((SQ_SIZE,SQ_SIZE))
+        s.set_alpha(150)
+        s.fill(green)
+        screen.blit(s, ((move.startRow+1)*SQ_SIZE, (move.startCol+1)*SQ_SIZE))
+        screen.blit(s, ((move.endRow+1)*SQ_SIZE, (move.endCol+1)*SQ_SIZE))
 
 """
 This is the Tamerlane Chess bot
