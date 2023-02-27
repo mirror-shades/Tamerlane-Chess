@@ -14,6 +14,12 @@
 #p[x] - pawn[type]
 #--- - empty space
 
+#todo
+#capture list
+#quit button
+#title image
+#choose board setup
+
 import pygame as p
 
 
