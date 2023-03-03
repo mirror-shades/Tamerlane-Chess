@@ -21,6 +21,7 @@
 #choose board setup
 
 import pygame as p
+import copy
 
 
 """
@@ -75,15 +76,17 @@ playerOne = True
 playerTwo = False
 intro = True
 chooseColour = False
+quitting = False
 winner = ""
 validMoves = []
 moveLog = []
 
-# create two buttons
+# create menu buttons
 button_width = 200
 button_height = 50
-play_human_button = p.Rect((WIDTH/2)-(button_width/2), 400, button_width, button_height)
-play_ai_button = p.Rect((WIDTH/2)-(button_width/2), 500, button_width, button_height)
+play_human_button = p.Rect((WIDTH/2)-(button_width/2), 450, button_width, button_height)
+play_ai_button = p.Rect((WIDTH/2)-(button_width/2), 550, button_width, button_height)
+exit_button = p.Rect(800, 15, button_width, button_height)
 """
 possible starting positions for the pieces according to various accounts of the game
 """
@@ -136,7 +139,7 @@ testBoard = [
     ["bKa", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"]
 ]
 
-board = masculineArray #this is the standard set up
+board = copy.deepcopy(masculineArray) #this is the standard set up
 #board = feminineArray
 #board = thirdArray
 #board = testBoard
@@ -181,8 +184,34 @@ def undoMove():
     findKings()
     moveMade = True
 
+def resetBoard():
+    global board, whiteKingLocation, blackKingLocation, whiteRoyalty, blackRoyalty, turnCount, checkmate, draw, pawnXW, pawnXB, moveMade, whiteToMove, playerOne, playerTwo, intro, chooseColour, quitting, winner, validMoves, moveLog
+    quitting = False
+    board = copy.deepcopy(masculineArray)
+    intro = True
+    whiteKingLocation = (8,5)
+    blackKingLocation = (1,5)
+    whiteRoyalty = 1
+    blackRoyalty = 1
+    turnCount = 0
+    checkmate = False
+    draw = False
+    pawnXW = False
+    pawnXB = False
+    moveMade = False
+    whiteToMove = True
+    playerOne = True
+    playerTwo = False
+    intro = True
+    chooseColour = False
+    quitting = False
+    winner = ""
+    validMoves = []
+    moveLog = []
+    
+
 def main():
-    global whiteToMove, whiteKingLocation, blackKingLocation, moveMade, winner, validMoves, playerOne, playerTwo, intro, chooseColour
+    global whiteToMove, whiteKingLocation, blackKingLocation, moveMade, winner, validMoves, playerOne, playerTwo, intro, chooseColour, quitting, board, masculineArray, feminineArray, thirdArray
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
     clock = p.time.Clock()
@@ -222,12 +251,23 @@ def main():
                             intro = False
                         elif play_ai_button.collidepoint(location):
                             chooseColour = True
+                    #quit confirmation screen
+                    if exit_button.collidepoint(location):
+                        quitting = True
+                    if play_human_button.collidepoint(location) and quitting == True:
+                        resetBoard()
+                    elif play_ai_button.collidepoint(location) and quitting == True:
+                        quitting = False
                     #call a draw button
-                    if(p.mouse.get_pos()[0] > 15 and p.mouse.get_pos()[1] > 15 and p.mouse.get_pos()[0] < 250 and p.mouse.get_pos()[1] < 70):
+                    if(p.mouse.get_pos()[0] > 15 and p.mouse.get_pos()[1] > 15 and p.mouse.get_pos()[0] < 250 and p.mouse.get_pos()[1] < 70) and (quitting == False):
                         if canDraw(whiteToMove) == True:
                             callDraw()
                     #main game clicking logic
-                    if(col >= 0 and col <= 9 and row >= 0 and row <= 10):
+                    if(col >= 0 and col <= 9 and row >= 0 and row <= 10) and (quitting == False):
+                        if len(playerClicks) == 1:
+                            if board[playerClicks[0][0]][playerClicks[0][1]] == "---":
+                                sqSelected = ()
+                                playerClicks = []
                         if sqSelected == (col,row): #same square
                             sqSelected = ()
                             playerClicks = []
@@ -273,7 +313,8 @@ def main():
                     winner = "w"
             moveMade = True
         if moveMade:
-            animateMove(moveLog[-1], screen, clock)
+            if(len(moveLog) != 0):
+                animateMove(moveLog[-1], screen, clock)
             findKings()
             checkDrawOnMaterial()
             checkPromotion()
@@ -918,21 +959,24 @@ def write(text,screen,color,pos,size):
     screen.blit(font.render(text,True,color),pos)
 
 def drawGameState(screen, validMoves, sqSelected):
-    global whiteToMove, darkBlue, play_human_button, play_ai_button, intro
+    global whiteToMove, darkBlue, play_human_button, play_ai_button, intro, quitting
     b = p.Surface((SQ_SIZE*3,SQ_SIZE-20))
     bg = p.transform.scale(p.image.load("images/bg.png"), (WIDTH, HEIGHT))
     screen.blit(bg, (0,0))
+    # set font and font size and font color
+    text_color = (255, 255, 255)
+    font = p.font.Font(None, 36)
     if(intro == True):
+        #draws board on screen
         drawBoard(screen)
-        text_color = (255, 255, 255)
-
-        # set font and font size
-        font = p.font.Font(None, 36)
-
+        #draws a semi-transparent rectangle over the screen
+        alpha_screen = p.Surface((WIDTH,HEIGHT))  # the size of your rect
+        alpha_screen.set_alpha(64)                # alpha level
+        alpha_screen.fill((0,0,0))           # this fills the entire surface
+        screen.blit(alpha_screen, (0,0))
         # draw buttons
         p.draw.rect(screen, darkBlue, play_human_button)
         p.draw.rect(screen, darkBlue, play_ai_button)
-
         if(chooseColour == False):
             # render text on buttons
             play_human_text = font.render("Play vs Human", True, text_color)
@@ -941,20 +985,22 @@ def drawGameState(screen, validMoves, sqSelected):
             # render text on buttons
             play_human_text = font.render("Play as White", True, text_color)
             play_ai_text = font.render("Play as Black", True, text_color)
-
         # center text on buttons
         play_human_text_rect = play_human_text.get_rect(center=play_human_button.center)
         play_ai_text_rect = play_ai_text.get_rect(center=play_ai_button.center)
-
         # draw text on buttons
         screen.blit(play_human_text, play_human_text_rect)
         screen.blit(play_ai_text, play_ai_text_rect)
-
         #draw title
-        title = p.font.SysFont("georgia", 100)
-        title_text = title.render("Tamerlane Chess", True, darkBlue)
-        screen.blit(title_text, (WIDTH/2 - title_text.get_width()/2, 50))
+        title = p.transform.scale(p.image.load("images/title.png"), (1200, 150))
+        screen.blit(title, (WIDTH/2 - title.get_width()/2, 200))
+        
     else:
+        #exit button
+        p.draw.rect(screen, darkBlue, exit_button)
+        exit_text = font.render("Exit", True, text_color)
+        exit_text_rect = exit_text.get_rect(center=exit_button.center)
+        screen.blit(exit_text, exit_text_rect)
         if(canDraw(whiteToMove) == True):
             b.fill((250,200,150))
             screen.blit(b, (10,10))
@@ -975,6 +1021,25 @@ def drawGameState(screen, validMoves, sqSelected):
             write("Checkmate", screen, darkBlue,(225,425),150)
         if winner == "d":
             write("Draw", screen, darkBlue,(350,415),200)
+        if(quitting == True):
+            alpha_screen = p.Surface((WIDTH,HEIGHT))  # the size of your rect
+            alpha_screen.set_alpha(128)                # alpha level
+            alpha_screen.fill((0,0,0))           # this fills the entire surface
+            screen.blit(alpha_screen, (0,0))
+            #write "Quit Game?" on the screen
+            write("Quit Game?", screen, (255,255,255),(WIDTH/2 - 100,HEIGHT/2 - 200),50)
+            # draw buttons
+            p.draw.rect(screen, darkBlue, play_human_button)
+            p.draw.rect(screen, darkBlue, play_ai_button)
+            # render text on buttons
+            play_human_text = font.render("Yes", True, text_color)
+            play_ai_text = font.render("No", True, text_color)
+            # center text on buttons
+            play_human_text_rect = play_human_text.get_rect(center=play_human_button.center)
+            play_ai_text_rect = play_ai_text.get_rect(center=play_ai_button.center)
+            # draw text on buttons
+            screen.blit(play_human_text, play_human_text_rect)
+            screen.blit(play_ai_text, play_ai_text_rect)
     p.display.flip()
 """
 Draw squares
