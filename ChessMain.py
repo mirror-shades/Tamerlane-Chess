@@ -16,8 +16,6 @@
 
 #todo
 #capture list
-#quit button
-#title image
 #choose board setup
 
 import pygame as p
@@ -77,6 +75,7 @@ playerTwo = False
 intro = True
 chooseColour = False
 quitting = False
+selection = 1
 winner = ""
 validMoves = []
 moveLog = []
@@ -87,6 +86,12 @@ button_height = 50
 play_human_button = p.Rect((WIDTH/2)-(button_width/2), 450, button_width, button_height)
 play_ai_button = p.Rect((WIDTH/2)-(button_width/2), 550, button_width, button_height)
 exit_button = p.Rect(800, 15, button_width, button_height)
+masculine_button = p.Rect((WIDTH/2)-(button_width/2) - 250, 750, button_width, button_height)
+feminine_button = p.Rect((WIDTH/2)-(button_width/2), 750, button_width, button_height)
+third_button = p.Rect((WIDTH/2)-(button_width/2) + 250, 750, button_width, button_height)
+masculine_button_h = p.Rect((WIDTH/2)-((button_width+10)/2) - 250, 745, button_width+10, button_height+10)
+feminine_button_h = p.Rect((WIDTH/2)-((button_width+10)/2), 745, button_width+10, button_height+10)
+third_button_h = p.Rect((WIDTH/2)-((button_width+10)/2) + 250, 745, button_width+10, button_height+10)
 """
 possible starting positions for the pieces according to various accounts of the game
 """
@@ -105,7 +110,7 @@ masculineArray = [
 feminineArray = [
     ["bEl", "---", "bCa", "---", "bVi", "bKa", "bAd", "---", "bCa", "---", "bEl"],
     ["bRk", "bMo", "bTa", "bGi", 'bWe', "bpK", "bWe", "bGi", "bTa", "bMo", "bRk"],
-    ["bpR", "bpM", "pbT", "bpG", "bpV", "---", "bpA", "bpE", "bpC", "bpW", "bp0"],
+    ["bpR", "bpM", "bpT", "bpG", "bpV", "---", "bpA", "bpE", "bpC", "bpW", "bp0"],
     ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"],
     ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"],
     ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"],
@@ -117,7 +122,7 @@ feminineArray = [
 thirdArray = [
     ["bEl", "---", "bCa", "---", "bVi", "bKa", "bAd", "---", "bCa", "---", "bEl"],
     ["bRk", "bMo", "bWe", "bTa", 'bGi', "bpK", "bGi", "bTa", "bWe", "bMo", "bRk"],
-    ["bpR", "bpM", "pbT", "bpG", "bpV", "---", "bpA", "bpE", "bpC", "bpW", "bp0"],
+    ["bpR", "bpM", "bpT", "bpG", "bpV", "---", "bpA", "bpE", "bpC", "bpW", "bp0"],
     ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"],
     ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"],
     ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"],
@@ -185,10 +190,7 @@ def undoMove():
     moveMade = True
 
 def resetBoard():
-    global board, whiteKingLocation, blackKingLocation, whiteRoyalty, blackRoyalty, turnCount, checkmate, draw, pawnXW, pawnXB, moveMade, whiteToMove, playerOne, playerTwo, intro, chooseColour, quitting, winner, validMoves, moveLog
-    quitting = False
-    board = copy.deepcopy(masculineArray)
-    intro = True
+    global board, whiteKingLocation, blackKingLocation, whiteRoyalty, blackRoyalty, turnCount, checkmate, draw, pawnXW, pawnXB, moveMade, whiteToMove, playerOne, playerTwo, intro, chooseColour, quitting, winner, validMoves, moveLog, selection
     whiteKingLocation = (8,5)
     blackKingLocation = (1,5)
     whiteRoyalty = 1
@@ -205,13 +207,23 @@ def resetBoard():
     intro = True
     chooseColour = False
     quitting = False
+    selection = 1
     winner = ""
     validMoves = []
     moveLog = []
-    
+    board = copy.deepcopy(masculineArray) #this is the standard set up
+    main()
+
+def handleBoardSelection(sel):
+    if sel == 1:
+        pass
+    if sel == 2:
+        pass
+    if sel == 3:
+        pass
 
 def main():
-    global whiteToMove, whiteKingLocation, blackKingLocation, moveMade, winner, validMoves, playerOne, playerTwo, intro, chooseColour, quitting, board, masculineArray, feminineArray, thirdArray
+    global whiteToMove, whiteKingLocation, blackKingLocation, moveMade, winner, validMoves, playerOne, playerTwo, intro, chooseColour, quitting, board, selection, masculineArray, feminineArray, thirdArray
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
     clock = p.time.Clock()
@@ -254,10 +266,30 @@ def main():
                     #quit confirmation screen
                     if exit_button.collidepoint(location):
                         quitting = True
+                    #play human or ai
                     if play_human_button.collidepoint(location) and quitting == True:
                         resetBoard()
                     elif play_ai_button.collidepoint(location) and quitting == True:
                         quitting = False
+                    #board selection
+                    if masculine_button.collidepoint(location) and intro == True:
+                        selection = 1
+                        board = copy.deepcopy(masculineArray)
+                        whiteKingLocation = (8,5)
+                        blackKingLocation = (1,5)
+                        validMoves = getValidMoves()
+                    if feminine_button.collidepoint(location) and intro == True:
+                        selection = 2
+                        board = copy.deepcopy(feminineArray)
+                        whiteKingLocation = (9,5)
+                        blackKingLocation = (0,5)
+                        validMoves = getValidMoves()
+                    if third_button.collidepoint(location) and intro == True:
+                        selection = 3
+                        board = copy.deepcopy(thirdArray)
+                        whiteKingLocation = (9,5)
+                        blackKingLocation = (0,5)
+                        validMoves = getValidMoves()
                     #call a draw button
                     if(p.mouse.get_pos()[0] > 15 and p.mouse.get_pos()[1] > 15 and p.mouse.get_pos()[0] < 250 and p.mouse.get_pos()[1] < 70) and (quitting == False):
                         if canDraw(whiteToMove) == True:
@@ -356,7 +388,7 @@ functions to calculate moves
 #this function is working for white, but sees black as in check when it is not  
 
 def getValidMoves():  
-    global whiteToMove,whiteKingLocation,blackKingLocation,moveMade    
+    global whiteToMove,whiteKingLocation,blackKingLocation,moveMade,board
     #1) generate all ally moves
     allMoves =  getAllPossibleMoves()
     _validMoves = []
@@ -375,7 +407,7 @@ def getValidMoves():
     return _validMoves
     
 def getAllPossibleMoves():
-    global whiteToMove
+    global whiteToMove, board
     moves = []
     for c in range(len(board)):
         for r in range(len(board[c])):
@@ -959,7 +991,7 @@ def write(text,screen,color,pos,size):
     screen.blit(font.render(text,True,color),pos)
 
 def drawGameState(screen, validMoves, sqSelected):
-    global whiteToMove, darkBlue, play_human_button, play_ai_button, intro, quitting
+    global whiteToMove, darkBlue, green, play_human_button, play_ai_button, intro, quitting
     b = p.Surface((SQ_SIZE*3,SQ_SIZE-20))
     bg = p.transform.scale(p.image.load("images/bg.png"), (WIDTH, HEIGHT))
     screen.blit(bg, (0,0))
@@ -992,9 +1024,32 @@ def drawGameState(screen, validMoves, sqSelected):
         screen.blit(play_human_text, play_human_text_rect)
         screen.blit(play_ai_text, play_ai_text_rect)
         #draw title
-        title = p.transform.scale(p.image.load("images/title.png"), (1200, 150))
-        screen.blit(title, (WIDTH/2 - title.get_width()/2, 200))
-        
+        title = p.transform.scale(p.image.load("images/title.png"), (1200, 175))
+        screen.blit(title, (WIDTH/2 - title.get_width()/2, 190))
+
+        ## board selection buttons
+        if selection == 1:
+            p.draw.rect(screen, green, masculine_button_h)
+        if selection == 2:
+            p.draw.rect(screen, green, feminine_button_h)
+        if selection == 3:
+            p.draw.rect(screen, green, third_button_h)
+        # draw buttons
+        p.draw.rect(screen, darkBlue, masculine_button)
+        p.draw.rect(screen, darkBlue, feminine_button)
+        p.draw.rect(screen, darkBlue, third_button)
+        # render text on buttons
+        masculine_text = font.render("Masculine Array", True, text_color)
+        feminine_text = font.render("Feminine Array", True, text_color)
+        third_text = font.render("Third Array", True, text_color)
+        # center text on buttons
+        masculine_text_rect = masculine_text.get_rect(center=masculine_button.center)
+        feminine_text_rect = feminine_text.get_rect(center=feminine_button.center)
+        third_text_rect = third_text.get_rect(center=third_button.center)
+        # draw text on buttons
+        screen.blit(masculine_text, masculine_text_rect)
+        screen.blit(feminine_text, feminine_text_rect)
+        screen.blit(third_text, third_text_rect)
     else:
         #exit button
         p.draw.rect(screen, darkBlue, exit_button)
