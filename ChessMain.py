@@ -16,7 +16,6 @@
 
 #todo
 #capture list
-#choose board setup
 
 import pygame as p
 import copy
@@ -77,8 +76,7 @@ chooseColour = False
 quitting = False
 selection = 1
 winner = ""
-validMoves = []
-moveLog = []
+validMoves, moveLog, whitePiecesCaptured, blackPiecesCaptured = [], [], [], []
 
 # create menu buttons
 button_width = 200
@@ -190,7 +188,7 @@ def undoMove():
     moveMade = True
 
 def resetBoard():
-    global board, whiteKingLocation, blackKingLocation, whiteRoyalty, blackRoyalty, turnCount, checkmate, draw, pawnXW, pawnXB, moveMade, whiteToMove, playerOne, playerTwo, intro, chooseColour, quitting, winner, validMoves, moveLog, selection
+    global board, whiteKingLocation,whitePiecesCaptured, blackPiecesCaptured, blackKingLocation, whiteRoyalty, blackRoyalty, turnCount, checkmate, draw, pawnXW, pawnXB, moveMade, whiteToMove, playerOne, playerTwo, intro, chooseColour, quitting, winner, validMoves, moveLog, selection
     whiteKingLocation = (8,5)
     blackKingLocation = (1,5)
     whiteRoyalty = 1
@@ -209,8 +207,7 @@ def resetBoard():
     quitting = False
     selection = 1
     winner = ""
-    validMoves = []
-    moveLog = []
+    validMoves, moveLog, whitePiecesCaptured, blackPiecesCaptured = [], [], [], []
     board = copy.deepcopy(masculineArray) #this is the standard set up
     main()
 
@@ -311,6 +308,10 @@ def main():
                             checkMove = [(move.startCol,move.startRow),(move.endCol,move.endRow)]
                             if(checkMove in validMoves):
                                 if (board[move.startCol][move.startRow] != "---"):
+                                    if whiteToMove : curColor = "w" 
+                                    else : curColor = "b"
+                                    if(board[move.endCol][move.endRow] != "---" and board[move.endCol][move.endRow][0] != curColor):
+                                        capturePiece(board[move.endCol][move.endRow])
                                     makeMove(move)
                                     moveLog.append(move)
                                     whiteToMove = not whiteToMove
@@ -332,8 +333,13 @@ def main():
             AIMove = findGreedyMove()
             if AIMove is not None:
                 AIMove = Move(AIMove[0], AIMove[1], board)
+                if whiteToMove : curColor = "w"
+                else : curColor = "b"
+                if(board[AIMove.endCol][AIMove.endRow] != "---" and board[AIMove.endCol][AIMove.endRow][0] != curColor):
+                    capturePiece(board[AIMove.endCol][AIMove.endRow])
                 makeMove(AIMove)
                 moveLog.append(AIMove)
+                print(AIMove.endCol, AIMove.endRow)
                 whiteToMove = not whiteToMove
                 if board[0][0] == "wpx" or board[9][10] == "bpx":
                     checkPawnForks()
@@ -478,6 +484,14 @@ def findKings():
                 _blackRoyalty += 1
     whiteRoyalty = _whiteRoyalty
     blackRoyalty = _blackRoyalty
+
+def capturePiece(peice):
+    global whitePiecesCaptured, blackPiecesCaptured
+    if(peice[0] == "w"):
+        whitePiecesCaptured.append(peice)
+    else:
+        blackPiecesCaptured.append(peice)
+    print(whitePiecesCaptured," ",blackPiecesCaptured)
 """
 piece logic
 """
@@ -1072,6 +1086,8 @@ def drawGameState(screen, validMoves, sqSelected):
             s.fill(p.Color(	(220,20,60)))
             screen.blit(s, ((kloc[1]+1)*SQ_SIZE, (kloc[0]+1)*SQ_SIZE))
         drawPieces(screen)
+        #print the list of captured pieces
+        drawCapturedPieces(screen)
         if winner == "w" or winner == "b":
             write("Checkmate", screen, darkBlue,(225,425),150)
         if winner == "d":
@@ -1173,6 +1189,27 @@ def highlightLastMove(screen):
         s.fill(green)
         screen.blit(s, ((move.startRow+1)*SQ_SIZE, (move.startCol+1)*SQ_SIZE))
         screen.blit(s, ((move.endRow+1)*SQ_SIZE, (move.endCol+1)*SQ_SIZE))
+"""
+draw captured pieces
+"""
+def drawCapturedPieces(screen):
+    global whitePiecesCaptured, blackPiecesCaptured
+    whiteCaptured = listToString(whitePiecesCaptured)
+    blackCaptured = listToString(blackPiecesCaptured)
+    write(blackCaptured, screen, (255,255,255),(WIDTH - 950,HEIGHT - 80),50)
+    write(whiteCaptured, screen, (0,0,0),(WIDTH - 950,HEIGHT - 130),50)
+
+def listToString(a):
+    # initialize an empty string
+    str1 = ""
+    # traverse in the string
+    for ele in a:
+        str1 += " "
+        str1 += ele
+    # return string
+    return str1
+
+
 
 """
 This is the Tamerlane Chess bot
