@@ -1194,21 +1194,31 @@ draw captured pieces
 """
 def drawCapturedPieces(screen):
     global whitePiecesCaptured, blackPiecesCaptured
-    whiteCaptured = listToString(whitePiecesCaptured)
-    blackCaptured = listToString(blackPiecesCaptured)
-    write(blackCaptured, screen, (255,255,255),(WIDTH - 950,HEIGHT - 80),50)
-    write(whiteCaptured, screen, (0,0,0),(WIDTH - 950,HEIGHT - 130),50)
-
-def listToString(a):
-    # initialize an empty string
-    str1 = ""
-    # traverse in the string
-    for ele in a:
-        str1 += " "
-        str1 += ele
-    # return string
-    return str1
-
+    white=0
+    black=0
+    modw = 50
+    modb = 50
+    if len(whitePiecesCaptured) > 17:
+        modw = 40
+    if len(whitePiecesCaptured) > 20:
+        modw = 30
+    if len(whitePiecesCaptured) > 24:
+        modw = 25
+    if len(blackPiecesCaptured) > 17:
+        modb = 40
+    if len(blackPiecesCaptured) > 20:
+        modb = 30
+    if len(blackPiecesCaptured) > 24:
+        modb = 25
+    for peices in whitePiecesCaptured:
+        spacew = white*modw
+        screen.blit(IMAGES[peices], p.Rect(WIDTH - 950+spacew,HEIGHT - 85, SQ_SIZE, SQ_SIZE))
+        white+=1
+    for peices in blackPiecesCaptured:
+        spaceb = black*modb
+        screen.blit(IMAGES[peices], p.Rect(WIDTH - 950+spaceb,HEIGHT - 160, SQ_SIZE, SQ_SIZE))
+        black+=1
+    
 
 
 """
