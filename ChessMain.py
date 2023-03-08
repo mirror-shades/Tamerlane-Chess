@@ -81,8 +81,9 @@ validMoves, moveLog, whitePiecesCaptured, blackPiecesCaptured = [], [], [], []
 # create menu buttons
 button_width = 200
 button_height = 50
-play_human_button = p.Rect((WIDTH/2)-(button_width/2), 450, button_width, button_height)
-play_ai_button = p.Rect((WIDTH/2)-(button_width/2), 550, button_width, button_height)
+play_human_button = p.Rect((WIDTH/2)-(button_width/2), 425, button_width, button_height)
+play_ai_button = p.Rect((WIDTH/2)-(button_width/2), 525, button_width, button_height)
+ai_ai_button = p.Rect((WIDTH/2)-(button_width/2), 625, button_width, button_height)
 exit_button = p.Rect(800, 15, button_width, button_height)
 masculine_button = p.Rect((WIDTH/2)-(button_width/2) - 250, 750, button_width, button_height)
 feminine_button = p.Rect((WIDTH/2)-(button_width/2), 750, button_width, button_height)
@@ -260,6 +261,10 @@ def main():
                             intro = False
                         elif play_ai_button.collidepoint(location):
                             chooseColour = True
+                        elif ai_ai_button.collidepoint(location):
+                            playerOne = False
+                            playerTwo = False
+                            intro = False
                     #quit confirmation screen
                     if exit_button.collidepoint(location):
                         quitting = True
@@ -329,7 +334,7 @@ def main():
                 if e.key == p.K_z:
                     undoMove()
 
-        if not isHumanTurn and winner == "":
+        if not isHumanTurn and winner == "" and quitting == False:
             AIMove = findGreedyMove()
             if AIMove is not None:
                 AIMove = Move(AIMove[0], AIMove[1], board)
@@ -352,7 +357,7 @@ def main():
             moveMade = True
         if moveMade:
             if(len(moveLog) != 0):
-                animateMove(moveLog[-1], screen, clock)
+                pass#animateMove(moveLog[-1], screen, clock)
             findKings()
             checkDrawOnMaterial()
             checkPromotion()
@@ -491,7 +496,6 @@ def capturePiece(peice):
         whitePiecesCaptured.append(peice)
     else:
         blackPiecesCaptured.append(peice)
-    print(whitePiecesCaptured," ",blackPiecesCaptured)
 """
 piece logic
 """
@@ -1024,9 +1028,16 @@ def drawGameState(screen, validMoves, sqSelected):
         p.draw.rect(screen, darkBlue, play_human_button)
         p.draw.rect(screen, darkBlue, play_ai_button)
         if(chooseColour == False):
+            #this button is inside the conditional because the others are reused
+            p.draw.rect(screen, darkBlue, ai_ai_button)
             # render text on buttons
+            ai_ai_text = font.render("AI vs AI", True, text_color)
             play_human_text = font.render("Play vs Human", True, text_color)
             play_ai_text = font.render("Play vs AI", True, text_color)
+            # center text on button
+            ai_ai_text_rect = ai_ai_text.get_rect(center=ai_ai_button.center)
+            # draw text on button
+            screen.blit(ai_ai_text, ai_ai_text_rect)
         else:
             # render text on buttons
             play_human_text = font.render("Play as White", True, text_color)
@@ -1183,7 +1194,6 @@ def highlightLastMove(screen):
     global moveLog, green
     if(len(moveLog) > 0):
         move = moveLog[-1]
-        print(move.startRow,move.startCol,move.endRow,move.endCol)
         s = p.Surface((SQ_SIZE,SQ_SIZE))
         s.set_alpha(150)
         s.fill(green)
@@ -1194,30 +1204,61 @@ draw captured pieces
 """
 def drawCapturedPieces(screen):
     global whitePiecesCaptured, blackPiecesCaptured
+    numListw = []
+    numListb = []
+    sortedListw = []
+    sortedListb = []
+    pieceToNum = {"p":1 , "E":2 , "W":3 , "A":4 , "V":5 , "C":6 , "M":7 , "T":8 , "G":9 , "R":10 , "K":11}
+    numToPiece = {"1":"px", "2":"El", "3":"We","4":"Ad","5":"Vi","6":"Ca","7":"Mo","8":"Ta","9":"Gi","10":"Rk","11":"Ka"}
+    #sorts the list of captuuured pieces by value
+    for pieces in whitePiecesCaptured:
+        num = pieceToNum[pieces[1]]
+        numListw.append(num)
+    numListw = sorted(numListw)
+    for pieces in numListw:
+        piece = "w"+numToPiece[str(pieces)]
+        sortedListw.append(piece)
+    for pieces in blackPiecesCaptured:
+        num = pieceToNum[pieces[1]]
+        numListb.append(num)
+    numListb = sorted(numListb)
+    for pieces in numListb:
+        piece = "b"+numToPiece[str(pieces)]
+        sortedListb.append(piece)
+    #values for determining the spacing of the pieces
     white=0
     black=0
     modw = 50
     modb = 50
-    if len(whitePiecesCaptured) > 17:
+    if len(sortedListw) > 17:
         modw = 40
-    if len(whitePiecesCaptured) > 20:
+    if len(sortedListw) > 20:
+        modw = 35
+    if len(sortedListw) > 24:
         modw = 30
-    if len(whitePiecesCaptured) > 24:
-        modw = 25
-    if len(blackPiecesCaptured) > 17:
+    if len(sortedListb) > 17:
         modb = 40
-    if len(blackPiecesCaptured) > 20:
+    if len(sortedListb) > 20:
+        modb = 35
+    if len(sortedListb) > 24:
         modb = 30
-    if len(blackPiecesCaptured) > 24:
-        modb = 25
-    for peices in whitePiecesCaptured:
+    #draws the pieces
+    for pieces in sortedListw:
         spacew = white*modw
-        screen.blit(IMAGES[peices], p.Rect(WIDTH - 950+spacew,HEIGHT - 85, SQ_SIZE, SQ_SIZE))
+        screen.blit(IMAGES[pieces], p.Rect(WIDTH - 950+spacew,HEIGHT - 85, SQ_SIZE, SQ_SIZE))
         white+=1
-    for peices in blackPiecesCaptured:
+    for pieces in sortedListb:
         spaceb = black*modb
-        screen.blit(IMAGES[peices], p.Rect(WIDTH - 950+spaceb,HEIGHT - 160, SQ_SIZE, SQ_SIZE))
+        screen.blit(IMAGES[pieces], p.Rect(WIDTH - 950+spaceb,HEIGHT - 160, SQ_SIZE, SQ_SIZE))
         black+=1
+    #write a score to the screen
+    score = scoreMaterial()
+    if score > 0:
+        score = "+"+str(score)
+    font = p.font.SysFont("Arial", 34, True, False)
+    text = font.render(str(score), 0, white)
+    screen.blit(text, p.Rect(WIDTH - 1025, HEIGHT - 95, 100, 100))
+
     
 
 
@@ -1309,7 +1350,6 @@ def findMinMax1():
     global whiteToMove, moveLog
     turnMultiplier = 1 if whiteToMove else -1
     startingBoard = scoreMaterial()
-    print(startingBoard)
     enemyMinMax = CHECKMATE
     loops = 0
     bestMove = None
@@ -1343,7 +1383,6 @@ def findMinMax1():
                 #grabs board score
                 newScore = (-turnMultiplier) * scoreMaterial()
                 #if board score is 
-                print(newScore)
                 if newScore < highestLocal:
                     highestLocal = newScore
                 whiteToMove = not whiteToMove
