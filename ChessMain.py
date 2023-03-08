@@ -15,7 +15,7 @@
 #--- - empty space
 
 #todo
-#capture list
+#change pawns lost to proper images in capture list
 
 import pygame as p
 import copy
@@ -1232,16 +1232,16 @@ def drawCapturedPieces(screen):
     modb = 50
     if len(sortedListw) > 17:
         modw = 40
-    if len(sortedListw) > 20:
+    if len(sortedListw) > 21:
         modw = 35
     if len(sortedListw) > 24:
-        modw = 30
+        modw = 31
     if len(sortedListb) > 17:
         modb = 40
-    if len(sortedListb) > 20:
+    if len(sortedListb) > 21:
         modb = 35
     if len(sortedListb) > 24:
-        modb = 30
+        modb = 31
     #draws the pieces
     for pieces in sortedListw:
         spacew = white*modw
@@ -1260,7 +1260,6 @@ def drawCapturedPieces(screen):
     screen.blit(text, p.Rect(WIDTH - 1025, HEIGHT - 95, 100, 100))
 
     
-
 
 """
 This is the Tamerlane Chess bot
